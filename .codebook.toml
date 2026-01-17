@@ -1,0 +1,6 @@
+dictionaries = ["en_us", "ru"]
+ignore_patterns = [
+    '[ა-ჰ]',                   # Georgian characters
+    '^[A-Z]{2,}$',             # All caps words like "HTML", "CSS"
+    'https?://[^\s]+'          # URLs
+]
