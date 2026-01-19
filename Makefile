@@ -1,10 +1,19 @@
 include .env
 export
 
-dev:
-	go tool air
+run-api:
+	go tool air --build.cmd "go build -o ./tmp/main cmd/api/main.go"
 
-build:
+run-bot:
+	go tool air --build.cmd "go build -o ./tmp/main cmd/bot/main.go"
+
+build-api:
+	go build -o api cmd/api/main.go
+
+build-bot:
 	go build -o bot cmd/bot/main.go
 
-.PHONY: dev
+seed-db:
+	go run cmd/seed/main.go
+
+.PHONY: run-api run-bot build-api build-bot seed-db
