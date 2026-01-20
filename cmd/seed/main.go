@@ -1,34 +1,37 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
+	repo "sgb/repository"
 
-	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "file:repository/test.db")
+	ctx := context.Background()
+	db, err := gorm.Open(sqlite.Open("tmp/test.db"))
 	if err != nil {
-		log.Fatalf("Database connection error: , %v", err)
+		log.Fatalf("Repository create error, %v", err)
 	}
 
-	defer db.Close()
+	db.AutoMigrate(&repo.Word{})
 
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS words (id INTEGER PRIMARY KEY AUTOINCREMENT, ru TEXT NOT NULL, ka TEXT NOT NULL)")
-	if err != nil {
-		log.Fatalf("Failed to create a table: %v", err)
-	}
+	words := make([]repo.Word, 2)
+	words = append(words,
+		repo.Word{Ru: "1", Ka: "1"},
+		repo.Word{Ru: "2", Ka: "2"},
+	)
 
-	_, err = db.Exec("DELETE FROM words")
-	if err != nil {
-		log.Fatalf("Failed to delete data: %v", err)
+	if err := gorm.G[repo.Word](db).CreateInBatches(ctx, &words, 5); err != nil {
+		log.Fatalf("Error: %v", err)
 	}
-
-	_, err = db.Exec("INSERT INTO words (ru, ka) VALUES ('светлячок', 'ციცინათელა')")
-	if err != nil {
-		log.Fatalf("Failed to insert a row: %v", err)
-	}
+	// 	ctx,
+	// 	&repository.Word{Ru: "sdcsd", Ka: "sdcd"},
+	// ); err != nil {
+	// 	log.Fatal("Can not create new words")
+	// }
 
 	log.Println("Seed data inserted successfully")
 }
