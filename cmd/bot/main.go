@@ -46,6 +46,7 @@ func main() {
 			handlers.StopCommand,
 			handlers.QuizCommand,
 			handlers.MyStatCommand,
+			handlers.WordsCommand,
 		},
 	})
 	if err != nil {
@@ -56,6 +57,7 @@ func main() {
 	handler.HandleMessage(handlers.HandleStopCommand, telegohandler.CommandEqual(handlers.StopCommand.Command))
 	handler.HandleMessage(handlers.HandleQuizCommand, telegohandler.CommandEqual(handlers.QuizCommand.Command))
 	handler.HandleMessage(handlers.MyStatCommandHandler, telegohandler.CommandEqual(handlers.MyStatCommand.Command))
+	handler.HandleMessage(handlers.HandleWordsCommand, telegohandler.CommandEqual(handlers.WordsCommand.Command))
 	handler.HandleCallbackQuery(handlers.HandleNewQuizCallback, telegohandler.CallbackDataEqual("new_quiz"))
 
 	log.Println("Bot is starting...")
