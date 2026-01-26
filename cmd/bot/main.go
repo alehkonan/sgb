@@ -5,63 +5,48 @@ import (
 	"log"
 	"os"
 
-	"github.com/mymmrac/telego"
-	"github.com/mymmrac/telego/telegohandler"
+	"github.com/alehkonan/sgb/packages/clients/tc"
+	"github.com/alehkonan/sgb/packages/consumer/ec"
+	"github.com/alehkonan/sgb/packages/processors/tp"
+	"github.com/alehkonan/sgb/packages/storage/sqlite"
+)
 
-	"sgb/handlers"
-	"sgb/middlewares"
+const (
+	batchSize = 100
 )
 
 func main() {
-	ctx := context.Background()
-	token := os.Getenv("BOT_TOKEN")
-	if token == "" {
-		log.Fatal("BOT_TOKEN environment variable is required")
+	tgHost := os.Getenv("TG_HOST")
+	if tgHost == "" {
+		log.Fatal("TG_HOST environment variable is required")
 	}
 
-	bot, err := telego.NewBot(token)
+	tgToken := os.Getenv("TG_TOKEN")
+	if tgToken == "" {
+		log.Fatal("TG_TOKEN environment variable is required")
+	}
+
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		log.Fatal("DB_PATH environment variable is required")
+	}
+
+	repo, err := sqlite.New(dbPath)
 	if err != nil {
-		log.Fatalf("Failed to create bot: %v", err)
+		log.Fatalf("storage open error: %v", err)
 	}
 
-	// defer bot.Close(ctx)
-
-	updates, err := bot.UpdatesViaLongPolling(ctx, nil)
+	err = repo.Init(context.TODO())
 	if err != nil {
-		log.Fatalf("Failed to get updates: %v", err)
+		log.Fatalf("storage init error: %v", err)
 	}
 
-	handler, err := telegohandler.NewBotHandler(bot, updates)
-	if err != nil {
-		log.Fatalf("Failed to create bot handler: %v", err)
-	}
+	processor := tp.New(tc.New(tgHost, tgToken), repo)
 
-	defer handler.Stop()
+	log.Print("Bot is running...")
 
-	handler.Use(middlewares.LogUserMessage)
-
-	err = bot.SetMyCommands(ctx, &telego.SetMyCommandsParams{
-		Commands: []telego.BotCommand{
-			handlers.StartCommand,
-			handlers.StopCommand,
-			handlers.QuizCommand,
-			handlers.MyStatCommand,
-			handlers.WordsCommand,
-		},
-	})
-	if err != nil {
-		log.Printf("Failed set a list of commands: %v", err)
-	}
-
-	handler.HandleMessage(handlers.HandleStartCommand, telegohandler.CommandEqual(handlers.StartCommand.Command))
-	handler.HandleMessage(handlers.HandleStopCommand, telegohandler.CommandEqual(handlers.StopCommand.Command))
-	handler.HandleMessage(handlers.HandleQuizCommand, telegohandler.CommandEqual(handlers.QuizCommand.Command))
-	handler.HandleMessage(handlers.MyStatCommandHandler, telegohandler.CommandEqual(handlers.MyStatCommand.Command))
-	handler.HandleMessage(handlers.HandleWordsCommand, telegohandler.CommandEqual(handlers.WordsCommand.Command))
-	handler.HandleCallbackQuery(handlers.HandleNewQuizCallback, telegohandler.CallbackDataEqual("new_quiz"))
-
-	log.Println("Bot is starting...")
-	if err := handler.Start(); err != nil {
-		log.Fatalf("Failed to start bot: %v", err)
+	consumer := ec.New(&processor, &processor, batchSize)
+	if err := consumer.Start(); err != nil {
+		log.Fatal("Bot is stopped", err)
 	}
 }

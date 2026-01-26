@@ -3,35 +3,41 @@ package main
 import (
 	"context"
 	"log"
-	repo "sgb/repository"
+	"os"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"github.com/alehkonan/sgb/packages/storage"
+	"github.com/alehkonan/sgb/packages/storage/sqlite"
 )
 
 func main() {
-	ctx := context.Background()
-	db, err := gorm.Open(sqlite.Open("tmp/test.db"))
-	if err != nil {
-		log.Fatalf("Repository create error, %v", err)
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		log.Fatal("DB_PATH environment variable is required")
 	}
 
-	db.AutoMigrate(&repo.Word{})
+	repo, err := sqlite.New(dbPath)
+	if err != nil {
+		log.Fatalf("can't open the storage: %v", err)
+	}
 
-	words := make([]repo.Word, 2)
+	err = repo.Init(context.TODO())
+	if err != nil {
+		log.Fatalf("can't init the storage: %v", err)
+	}
+
+	words := make([]storage.Word, 2)
 	words = append(words,
-		repo.Word{Ru: "1", Ka: "1"},
-		repo.Word{Ru: "2", Ka: "2"},
+		storage.Word{Ru: "1", Ka: "1"},
+		storage.Word{Ru: "2", Ka: "2"},
 	)
 
-	if err := gorm.G[repo.Word](db).CreateInBatches(ctx, &words, 5); err != nil {
-		log.Fatalf("Error: %v", err)
+	for _, word := range words {
+		err = repo.SaveWord(context.TODO(), &word)
+		if err != nil {
+			log.Printf("Word %s was not saved. Reason: %v", word.Ru, err)
+			continue
+		}
 	}
-	// 	ctx,
-	// 	&repository.Word{Ru: "sdcsd", Ka: "sdcd"},
-	// ); err != nil {
-	// 	log.Fatal("Can not create new words")
-	// }
 
 	log.Println("Seed data inserted successfully")
 }

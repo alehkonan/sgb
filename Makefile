@@ -8,10 +8,10 @@ run-bot:
 	go tool air --build.cmd "go build -o ./tmp/main cmd/bot/main.go"
 
 build-api:
-	go build -o api cmd/api/main.go
+	go build -o bin/api cmd/api/main.go
 
 build-bot:
-	go build -o bot cmd/bot/main.go
+	go build -o bin/bot cmd/bot/main.go
 
 seed-db:
 	go run cmd/seed/main.go
