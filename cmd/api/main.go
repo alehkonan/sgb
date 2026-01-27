@@ -1,19 +1,32 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net/http"
+	"os"
+
+	"github.com/alehkonan/sgb/packages/consumer/api"
+	"github.com/alehkonan/sgb/packages/storage/sqlite"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		log.Fatal("DB_PATH environment variable is required")
+	}
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello from API!"))
-	})
+	repo, err := sqlite.New(dbPath)
+	if err != nil {
+		log.Fatalf("storage open error: %v", err)
+	}
 
-	log.Print("API server is running...")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatalf("failed to start server: %v", err)
+	if err := repo.Init(context.TODO()); err != nil {
+		log.Fatalf("storage init error: %v", err)
+	}
+
+	server := api.New(repo)
+
+	if err = server.Start(); err != nil {
+		log.Fatalf("[API] error: %v", err)
 	}
 }

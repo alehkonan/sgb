@@ -1,0 +1,15 @@
+meta {
+  name: get words
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{api_url}}/words
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
