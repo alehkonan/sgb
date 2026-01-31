@@ -1,32 +1,33 @@
 package main
 
 import (
-	"context"
-	"log"
 	"os"
 
+	"github.com/alehkonan/sgb/internal/config"
+	"github.com/alehkonan/sgb/internal/logger"
 	"github.com/alehkonan/sgb/packages/consumer/api"
 	"github.com/alehkonan/sgb/packages/storage/sqlite"
 )
 
 func main() {
+	cfg := config.MustLoad()
+	log := logger.SetupLogger(cfg.Env)
+
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		log.Fatal("DB_PATH environment variable is required")
+		log.Warn("DB_PATH is not set")
+		os.Exit(1)
 	}
 
-	repo, err := sqlite.New(dbPath)
+	repo, err := sqlite.New(cfg.Env)
 	if err != nil {
-		log.Fatalf("storage open error: %v", err)
-	}
-
-	if err := repo.Init(context.TODO()); err != nil {
-		log.Fatalf("storage init error: %v", err)
+		log.Error("failed to init storage", logger.ErrAttr(err))
+		os.Exit(1)
 	}
 
 	server := api.New(repo)
-
 	if err = server.Start(); err != nil {
-		log.Fatalf("[API] error: %v", err)
+		log.Error("fail to start server", logger.ErrAttr(err))
+		os.Exit(1)
 	}
 }
