@@ -13,12 +13,6 @@ func main() {
 	cfg := config.MustLoad()
 	log := logger.SetupLogger(cfg.Env)
 
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		log.Warn("DB_PATH is not set")
-		os.Exit(1)
-	}
-
 	repo, err := sqlite.New(cfg.Env)
 	if err != nil {
 		log.Error("failed to init storage", logger.ErrAttr(err))
