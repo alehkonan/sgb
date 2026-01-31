@@ -3,6 +3,8 @@ package logger
 import (
 	"log/slog"
 	"os"
+
+	"github.com/charmbracelet/log"
 )
 
 const (
@@ -10,16 +12,14 @@ const (
 )
 
 func SetupLogger(env string) *slog.Logger {
-	var log *slog.Logger
+	var logger *slog.Logger
 
 	switch env {
 	case envLocal:
-		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		}))
+		logger = slog.New(log.New(os.Stdout))
 	}
 
-	return log
+	return logger
 }
 
 // ErrAttr creates slog attribute with key="error"
