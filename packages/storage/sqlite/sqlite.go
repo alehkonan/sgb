@@ -23,8 +23,14 @@ func New(path string) (*Storage, error) {
 		return nil, wrapErr(err)
 	}
 
-	_, err = db.Prepare(`CREATE TABLE IF NOT EXISTS words (ru TEXT, ka TEXT)`)
+	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS words (ru TEXT, ka TEXT)`)
 	if err != nil {
+		return nil, wrapErr(err)
+	}
+
+	defer stmt.Close()
+
+	if _, err = stmt.Exec(); err != nil {
 		return nil, wrapErr(err)
 	}
 
