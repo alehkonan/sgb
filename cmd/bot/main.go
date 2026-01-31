@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
@@ -34,11 +33,6 @@ func main() {
 	repo, err := sqlite.New(dbPath)
 	if err != nil {
 		log.Fatalf("storage open error: %v", err)
-	}
-
-	err = repo.Init(context.TODO())
-	if err != nil {
-		log.Fatalf("storage init error: %v", err)
 	}
 
 	processor := tp.New(tc.New(tgHost, tgToken), repo)

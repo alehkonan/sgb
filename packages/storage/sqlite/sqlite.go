@@ -16,25 +16,19 @@ type Storage struct {
 func New(path string) (*Storage, error) {
 	db, err := sql.Open("sqlite3", path)
 	if err != nil {
-		return nil, fmt.Errorf("can't open sql db: %w", err)
+		return nil, wrapErr(err)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("can't connect to sql db: %w", err)
+		return nil, wrapErr(err)
+	}
+
+	_, err = db.Prepare(`CREATE TABLE IF NOT EXISTS words (ru TEXT, ka TEXT)`)
+	if err != nil {
+		return nil, wrapErr(err)
 	}
 
 	return &Storage{db}, nil
-}
-
-func (s *Storage) Init(ctx context.Context) error {
-	q := `CREATE TABLE IF NOT EXISTS words (ru TEXT, ka TEXT)`
-
-	_, err := s.db.ExecContext(ctx, q)
-	if err != nil {
-		return fmt.Errorf("can't init sql storage: %W", err)
-	}
-
-	return nil
 }
 
 func (s *Storage) GetWords(ctx context.Context) ([]storage.Word, error) {
@@ -75,4 +69,8 @@ func (s *Storage) SaveWord(ctx context.Context, word *storage.Word) error {
 	}
 
 	return nil
+}
+
+func wrapErr(err error) error {
+	return fmt.Errorf("in sqlite storage: %w", err)
 }

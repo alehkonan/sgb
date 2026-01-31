@@ -20,11 +20,6 @@ func main() {
 		log.Fatalf("can't open the storage: %v", err)
 	}
 
-	err = repo.Init(context.TODO())
-	if err != nil {
-		log.Fatalf("can't init the storage: %v", err)
-	}
-
 	words := make([]storage.Word, 2)
 	words = append(words,
 		storage.Word{Ru: "1", Ka: "1"},
