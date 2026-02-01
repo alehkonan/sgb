@@ -4,28 +4,28 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/charmbracelet/log"
+	"github.com/lmittmann/tint"
 )
 
 const (
 	envLocal = "local"
 )
 
-func SetupLogger(env string) *slog.Logger {
-	var logger *slog.Logger
+// SetupLogger sets default slog logger based on the environment
+func SetupLogger(env string) {
+	var handler slog.Handler
 
 	switch env {
 	case envLocal:
-		logger = slog.New(log.New(os.Stdout))
+		handler = tint.NewHandler(os.Stdout, &tint.Options{
+			Level: slog.LevelDebug,
+		})
 	}
 
-	return logger
+	slog.SetDefault(slog.New(handler))
 }
 
 // ErrAttr creates slog attribute with key="error"
 func ErrAttr(err error) slog.Attr {
-	return slog.Attr{
-		Key:   "error",
-		Value: slog.StringValue(err.Error()),
-	}
+	return slog.String("error", err.Error())
 }
